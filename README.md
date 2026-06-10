@@ -151,7 +151,54 @@ En `app.js`, dentro del array `modules`, agrega un nuevo objeto:
 - JavaScript vanilla
 - FontAwesome (iconos)
 
-## 📄 Licencia
+## � Guardado gratuito en Firebase
+
+Si quieres que la aplicación guarde datos de usuarios de forma centralizada, usa Firebase (gratis en el plan Spark).
+
+1. Ve a https://console.firebase.google.com
+2. Crea un nuevo proyecto
+3. Añade una app web
+4. Copia la configuración de Firebase (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId)
+5. Reemplaza esos valores en `app.js` dentro de la variable `firebaseConfig`
+
+Ejemplo:
+
+```js
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROJECT_ID.firebaseapp.com",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_PROJECT_ID.appspot.com",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+```
+
+### Reglas de Firestore recomendadas para desarrollo
+
+En Firestore, ve a `Rules` y usa reglas abiertas temporales mientras pruebas:
+
+```js
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+```
+
+> Para producción, ajusta las reglas según tu política de acceso.
+
+### Qué guarda Firebase
+- `email`
+- `progress` (módulos completados)
+- `quizResult` (puntaje y estado de prueba)
+- `approvedAt` (fecha de aprobación cuando aprueba la prueba)
+- `updatedAt` (última fecha de modificación)
+
+## �📄 Licencia
 
 Este proyecto está disponible para SMARTD y sus colaboradores.
 
