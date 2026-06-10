@@ -496,11 +496,17 @@ const modules = [
 ];
 
 // Renderizar módulos
+// Estado de usuario y progreso
+let currentUser = null;
+let progress = {}; // { moduleId: true }
+let currentPlayer = null;
+
 function renderModules() {
     const modulesGrid = document.getElementById('modulesGrid');
     modulesGrid.innerHTML = '';
     
     modules.forEach(module => {
+        const done = progress[module.id];
         const card = document.createElement('div');
         card.className = 'module-card';
         card.innerHTML = `
@@ -508,19 +514,29 @@ function renderModules() {
             <div class="module-icon"><i class="${module.icon}"></i></div>
             <h3>${module.title}</h3>
             <p>${module.description}</p>
+            ${done ? '<div style="margin:8px 0; color:var(--success); font-weight:700;">✅ Completado</div>' : ''}
             <button class="btn btn-secondary" onclick="openModal(${module.id})">Ver Contenido</button>
         `;
         modulesGrid.appendChild(card);
     });
+    updateUserArea();
 }
 
 // Abrir modal
 function openModal(moduleId) {
     const module = modules.find(m => m.id === moduleId);
     if (module) {
-        document.getElementById('modalBody').innerHTML = module.content;
+        // add a mark-as-seen button and data attribute so we can init the player
+        const content = module.content + `
+            <div style="text-align:center; margin-top:1rem;">
+                <button id="markSeenBtn" class="btn btn-primary">Marcar como visto</button>
+            </div>
+        `;
+        document.getElementById('modalBody').innerHTML = content;
         document.getElementById('modal').style.display = 'block';
         document.body.style.overflow = 'hidden';
+        // initialize video player detection and button handler
+        setTimeout(() => initModuleModal(moduleId), 300);
     }
 }
 
@@ -576,3 +592,195 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// -------------------------
+// Auth / Progress helpers
+// -------------------------
+function storageKeyFor(email) {
+    return `smartd_progress_${email}`;
+}
+
+function saveProgress() {
+    if (!currentUser) return;
+    const key = storageKeyFor(currentUser);
+    localStorage.setItem(key, JSON.stringify(progress));
+}
+
+function loadProgressFor(email) {
+    const key = storageKeyFor(email);
+    const raw = localStorage.getItem(key);
+    try {
+        progress = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        progress = {};
+    }
+}
+
+function updateUserArea() {
+    const ua = document.getElementById('userArea');
+    if (!ua) return;
+    ua.innerHTML = '';
+    if (currentUser) {
+        const completed = Object.keys(progress).filter(k => progress[k]).length;
+        ua.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span style="font-weight:600;color:var(--secondary-color)">${currentUser}</span><span style="background:var(--primary-color);color:white;padding:6px 10px;border-radius:20px;font-size:0.9rem">${completed}/12</span><button class="btn" id="logoutBtn">Salir</button></div>`;
+        document.getElementById('logoutBtn').addEventListener('click', () => { logout(); });
+    } else {
+        ua.innerHTML = `<button class="btn btn-primary" id="loginBtn">Iniciar sesión</button>`;
+        const b = document.getElementById('loginBtn');
+        if (b) b.addEventListener('click', promptLogin);
+    }
+}
+
+function promptLogin() {
+    const email = prompt('Ingresa tu correo SMARTD para identificarte:');
+    if (!email || !email.includes('@')) return alert('Correo inválido');
+    currentUser = email.trim().toLowerCase();
+    loadProgressFor(currentUser);
+    rememberUser(currentUser);
+    updateUserArea();
+    renderModules();
+}
+
+function logout() {
+    currentUser = null;
+    progress = {};
+    localStorage.removeItem('smartd_user_email');
+    updateUserArea();
+    renderModules();
+}
+
+// Initialize login area on load
+document.addEventListener('DOMContentLoaded', function() {
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) loginBtn.addEventListener('click', promptLogin);
+    const testLink = document.getElementById('testLink');
+    if (testLink) testLink.addEventListener('click', function(e){ e.preventDefault(); openQuizModal(); });
+    // If already have a saved user (optional), try to restore
+    const savedUser = localStorage.getItem('smartd_user_email');
+    if (savedUser) {
+        currentUser = savedUser;
+        loadProgressFor(currentUser);
+    }
+    updateUserArea();
+});
+
+// Keep a record of logged email (optional)
+function rememberUser(email) {
+    localStorage.setItem('smartd_user_email', email);
+}
+
+// -------------------------
+// Video player integration
+// -------------------------
+function initModuleModal(moduleId) {
+    // attach mark button
+    const markBtn = document.getElementById('markSeenBtn');
+    if (markBtn) {
+        markBtn.onclick = function() {
+            markModuleComplete(moduleId);
+        };
+    }
+
+    // find iframe and attach YT player
+    const iframe = document.querySelector('#modal iframe');
+    if (iframe) {
+        // ensure id
+        iframe.id = 'ytplayer';
+        if (window.YT && YT.Player) {
+            if (currentPlayer && currentPlayer.destroy) currentPlayer.destroy();
+            currentPlayer = new YT.Player('ytplayer', {
+                events: {
+                    'onStateChange': function(event) {
+                        if (event.data === YT.PlayerState.ENDED) {
+                            markModuleComplete(moduleId);
+                        }
+                    }
+                }
+            });
+        } else {
+            // wait for API
+            const t = setInterval(() => {
+                if (window.YT && YT.Player) {
+                    clearInterval(t);
+                    initModuleModal(moduleId);
+                }
+            }, 300);
+        }
+    }
+}
+
+function markModuleComplete(moduleId) {
+    if (!currentUser) {
+        const ok = confirm('Debes iniciar sesión para guardar tu progreso. ¿Deseas iniciar sesión ahora?');
+        if (ok) { promptLogin(); }
+        return;
+    }
+    progress[moduleId] = true;
+    saveProgress();
+    renderModules();
+    // give feedback
+    const markBtn = document.getElementById('markSeenBtn');
+    if (markBtn) markBtn.textContent = 'Visto ✅';
+    checkOnboardingComplete();
+}
+
+function checkOnboardingComplete() {
+    const total = modules.length;
+    const done = Object.keys(progress).filter(k => progress[k]).length;
+    if (done >= total) {
+        // require passing quiz to mark onboarding complete
+        alert('Has completado los 12 módulos. Ahora realiza la prueba final (Prueba).');
+    }
+}
+
+// -------------------------
+// Quiz / Test final
+// -------------------------
+function openQuizModal() {
+    // build simple quiz: 12 preguntas de opción múltiple (1 por módulo)
+    let html = `<h2 class="module-title">Prueba Final - Onboarding</h2>`;
+    html += `<form id="quizForm">`;
+    modules.forEach((m, idx) => {
+        const qid = `q${idx+1}`;
+        html += `<div class="content-section"><h4>Pregunta ${idx+1}: ¿Cuál es el tema principal del módulo '${m.title}'?</h4>`;
+        html += `<label><input type="radio" name="${qid}" value="correct"> ${m.description}</label><br>`;
+        html += `<label><input type="radio" name="${qid}" value="wrong"> Otra opción</label>`;
+        html += `</div>`;
+    });
+    html += `<div style="text-align:center;margin-top:1rem;"><button type="submit" class="btn btn-secondary">Enviar Prueba</button></div>`;
+    html += `</form>`;
+
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('quizForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        gradeQuiz();
+    });
+}
+
+function gradeQuiz() {
+    const form = document.getElementById('quizForm');
+    if (!form) return;
+    const total = modules.length;
+    let correct = 0;
+    modules.forEach((m, idx) => {
+        const qid = `q${idx+1}`;
+        const val = form[qid] && form[qid].value;
+        if (val === 'correct') correct++;
+    });
+    const score = Math.round((correct / total) * 100);
+    alert(`Obtuviste ${score}% (${correct}/${total}).`);
+    if (score >= 70) {
+        // mark onboarding complete
+        if (currentUser) {
+            localStorage.setItem(`smartd_onboarding_complete_${currentUser}`, 'true');
+        }
+        alert('¡Felicidades! Has aprobado la prueba. Onboarding completado.');
+        closeModal();
+    } else {
+        alert('No alcanzaste el puntaje mínimo (70%). Revisa los módulos y vuelve a intentar.');
+    }
+}
+
