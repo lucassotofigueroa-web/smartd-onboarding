@@ -8,6 +8,7 @@ const modules = [
         description: "Conceptos fundamentales y rol del Data Engineer",
         content: `
             <h2 class="module-title">Introducción a Data Engineering</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=Cps_hCHJiYg" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>¿Qué es Data Engineering?</h4>
                 <ul>
@@ -44,6 +45,7 @@ const modules = [
         description: "Qué hace un Data Engineer en la organización",
         content: `
             <h2 class="module-title">Rol y Responsabilidades del Data Engineer</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=6QnVZRY7gCc" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Responsabilidades Principales</h4>
                 <ul>
@@ -84,6 +86,7 @@ const modules = [
         description: "Journey completo del dato en la organización",
         content: `
             <h2 class="module-title">Ciclo de Vida del Dato</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=VoJGJjjsKI0" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Etapas del Ciclo</h4>
                 <ul>
@@ -117,6 +120,7 @@ const modules = [
         description: "Tipos de datos que ingerimos",
         content: `
             <h2 class="module-title">Tipos de Fuentes de Datos</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=rQgXHQdDDRM" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Fuentes de Datos Comunes</h4>
                 <ul>
@@ -154,6 +158,7 @@ const modules = [
         description: "Diferentes paradigmas de procesamiento",
         content: `
             <h2 class="module-title">Tipos de Procesamiento</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=R-1UxCHqGBQ" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Batch Processing</h4>
                 <ul>
@@ -198,6 +203,7 @@ const modules = [
         description: "Paradigmas de integración de datos",
         content: `
             <h2 class="module-title">ETL vs ELT</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=K0vKlgFBOj8" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>ETL (Extract-Transform-Load)</h4>
                 <ul>
@@ -239,6 +245,7 @@ const modules = [
         description: "Anatomía y diseño de pipelines",
         content: `
             <h2 class="module-title">Pipelines de Datos</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=6QnVZRY7gCc" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>¿Qué es un Pipeline?</h4>
                 <ul>
@@ -281,6 +288,7 @@ const modules = [
         description: "Arquitectura de capas en data warehouses",
         content: `
             <h2 class="module-title">Capas de Datos</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=LTW3YhC-_C0" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Estructura de Capas</h4>
                 <ul>
@@ -321,6 +329,7 @@ const modules = [
         description: "Arquitecturas de almacenamiento modernas",
         content: `
             <h2 class="module-title">Data Warehouse vs Data Lake vs Lakehouse</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=Sva8S_g3xSA" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Data Warehouse</h4>
                 <ul>
@@ -408,6 +417,7 @@ const modules = [
         description: "Gestión de workflows y operación de datos",
         content: `
             <h2 class="module-title">Orquestación Básica y Operación</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=1WGjgO03TmQ" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>¿Qué es Orquestar?</h4>
                 <ul>
@@ -452,6 +462,7 @@ const modules = [
         description: "Cómo los usuarios finales utilizan los datos",
         content: `
             <h2 class="module-title">Consumo de Datos y Usuarios Finales</h2>
+            <p style="margin: 1rem 0; text-align: center;"><a href="https://www.youtube.com/watch?v=8EMW7ih4Zac" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.95rem;">🎥 Ver video en YouTube</a></p>
             <div class="content-section">
                 <h4>Formas de Consumo</h4>
                 <ul>
