@@ -500,6 +500,183 @@ const modules = [
 let currentUser = null;
 let progress = {}; // { moduleId: true }
 let currentPlayer = null;
+let quizResult = null;
+let firebaseEnabled = false;
+let firebaseDb = null;
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDYSzmiRRIekhKhLOLUujvp4pTdAsTp2go",
+    authDomain: "onboarding---smartd.firebaseapp.com",
+    projectId: "onboarding---smartd",
+    storageBucket: "onboarding---smartd.appspot.com",
+    messagingSenderId: "742458116218",
+    appId: "1:742458116218:web:c60013bef848a80e7913c3",
+    measurementId: "G-V23KF4QK0L"
+};
+
+function hasFirebaseConfig() {
+    return !firebaseConfig.apiKey.includes('REPLACE') && !firebaseConfig.projectId.includes('REPLACE');
+}
+
+function initFirebase() {
+    if (!hasFirebaseConfig()) {
+        console.warn('Firebase config not set. Using localStorage fallback only.');
+        return;
+    }
+    try {
+        firebase.initializeApp(firebaseConfig);
+        firebaseDb = firebase.firestore();
+        firebaseEnabled = true;
+    } catch (error) {
+        console.error('No se pudo inicializar Firebase:', error);
+        firebaseEnabled = false;
+    }
+}
+
+function getFirebaseDocId(email) {
+    return email.replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+function saveUserToFirebase() {
+    if (!firebaseEnabled || !currentUser) return;
+    const docId = getFirebaseDocId(currentUser);
+    const data = {
+        email: currentUser,
+        progress: progress,
+        quizResult: quizResult,
+        approvedAt: quizResult && quizResult.passed ? new Date().toISOString() : null,
+        updatedAt: new Date().toISOString()
+    };
+    firebaseDb.collection('onboardingUsers').doc(docId).set(data, { merge: true })
+        .catch(error => console.error('Error guardando en Firebase:', error));
+}
+
+function loadUserFromFirebase(email) {
+    if (!firebaseEnabled) return Promise.resolve();
+    const docId = getFirebaseDocId(email);
+    return firebaseDb.collection('onboardingUsers').doc(docId).get()
+        .then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                progress = data.progress || {};
+                quizResult = data.quizResult || null;
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando datos de Firebase:', error);
+        });
+}
+
+const quizQuestions = [
+    {
+        question: "¿Cuál es el rol principal de un Data Engineer?",
+        options: [
+            { text: "Construir y mantener pipelines de datos", correct: true },
+            { text: "Diseñar dashboards de negocio", correct: false },
+            { text: "Crear modelos de machine learning", correct: false },
+            { text: "Realizar auditorías financieras", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué etapa describe mejor la ingesta de datos?",
+        options: [
+            { text: "Extraer datos de fuentes y llevarlos al sistema", correct: true },
+            { text: "Visualizar datos en un dashboard", correct: false },
+            { text: "Crear modelos predictivos", correct: false },
+            { text: "Enviar reportes a los clientes", correct: false }
+        ]
+    },
+    {
+        question: "¿Cuál es una ventaja clave del procesamiento streaming?",
+        options: [
+            { text: "Procesar datos en tiempo real conforme llegan", correct: true },
+            { text: "Reducir el tamaño de los datos crudos", correct: false },
+            { text: "Eliminar la necesidad de almacenamiento", correct: false },
+            { text: "Garantizar que no haya errores", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué significa ETL?",
+        options: [
+            { text: "Extract, Transform, Load", correct: true },
+            { text: "Encrypt, Transfer, Log", correct: false },
+            { text: "Extract, Transfer, Link", correct: false },
+            { text: "Evaluate, Transform, Load", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué describe mejor un Data Lakehouse?",
+        options: [
+            { text: "Una arquitectura híbrida entre data lake y data warehouse", correct: true },
+            { text: "Un tipo de base de datos relacional", correct: false },
+            { text: "Un pipeline batch", correct: false },
+            { text: "Un servicio de visualización", correct: false }
+        ]
+    },
+    {
+        question: "¿Cuál es el objetivo de la idempotencia en datos?",
+        options: [
+            { text: "Permitir ejecutar procesos múltiples veces sin efectos duplicados", correct: true },
+            { text: "Aumentar la velocidad de procesamiento", correct: false },
+            { text: "Reducir el volumen de datos", correct: false },
+            { text: "Eliminar la validación de datos", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué representa la capa Raw en una arquitectura por capas?",
+        options: [
+            { text: "Datos en su forma original, sin transformar", correct: true },
+            { text: "Datos listos para consumo", correct: false },
+            { text: "Reportes entregables", correct: false },
+            { text: "Modelos analíticos", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué es un DAG en orquestación?",
+        options: [
+            { text: "Un grafo acíclico dirigido que define dependencias", correct: true },
+            { text: "Un tipo de almacén de datos", correct: false },
+            { text: "Un modelo de visualización", correct: false },
+            { text: "Una plataforma de streaming", correct: false }
+        ]
+    },
+    {
+        question: "¿Cuál es el principal beneficio de un data warehouse?",
+        options: [
+            { text: "Consultas analíticas rápidas sobre datos estructurados", correct: true },
+            { text: "Almacenamiento sin esquema", correct: false },
+            { text: "Procesamiento en tiempo real", correct: false },
+            { text: "Generar logs de eventos", correct: false }
+        ]
+    },
+    {
+        question: "¿Qué busca la trazabilidad de datos?",
+        options: [
+            { text: "Seguir el origen y transformaciones de un dato", correct: true },
+            { text: "Reducir el número de fuentes de datos", correct: false },
+            { text: "Aumentar la velocidad de carga", correct: false },
+            { text: "Crear dashboards automáticamente", correct: false }
+        ]
+    },
+    {
+        question: "¿Cuál es el propósito principal de la operación en un pipeline?",
+        options: [
+            { text: "Supervisar y mantener la ejecución correcta del flujo de datos", correct: true },
+            { text: "Diseñar modelos de datos", correct: false },
+            { text: "Almacenar archivos en disco", correct: false },
+            { text: "Transformar informes en gráficos", correct: false }
+        ]
+    },
+    {
+        question: "¿Cuál es la mejor descripción de consumo de datos?",
+        options: [
+            { text: "Uso de datos por usuarios finales, dashboards y APIs", correct: true },
+            { text: "Almacenamiento de datos crudos", correct: false },
+            { text: "Creación de ETLs", correct: false },
+            { text: "Auditoría de datos", correct: false }
+        ]
+    }
+];
 
 function renderModules() {
     const modulesGrid = document.getElementById('modulesGrid');
@@ -604,15 +781,41 @@ function saveProgress() {
     if (!currentUser) return;
     const key = storageKeyFor(currentUser);
     localStorage.setItem(key, JSON.stringify(progress));
+    if (firebaseEnabled) {
+        saveUserToFirebase();
+    }
 }
 
-function loadProgressFor(email) {
+function saveQuizResult() {
+    if (!currentUser || !quizResult) return;
+    const key = `smartd_quiz_result_${currentUser}`;
+    localStorage.setItem(key, JSON.stringify(quizResult));
+    if (firebaseEnabled) {
+        saveUserToFirebase();
+    }
+}
+
+async function loadProgressFor(email) {
     const key = storageKeyFor(email);
     const raw = localStorage.getItem(key);
     try {
         progress = raw ? JSON.parse(raw) : {};
     } catch (e) {
         progress = {};
+    }
+    loadQuizResultFor(email);
+    if (firebaseEnabled) {
+        await loadUserFromFirebase(email);
+    }
+}
+
+function loadQuizResultFor(email) {
+    const key = `smartd_quiz_result_${email}`;
+    const raw = localStorage.getItem(key);
+    try {
+        quizResult = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        quizResult = null;
     }
 }
 
@@ -622,7 +825,9 @@ function updateUserArea() {
     ua.innerHTML = '';
     if (currentUser) {
         const completed = Object.keys(progress).filter(k => progress[k]).length;
-        ua.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><span style="font-weight:600;color:var(--secondary-color)">${currentUser}</span><span style="background:var(--primary-color);color:white;padding:6px 10px;border-radius:20px;font-size:0.9rem">${completed}/12</span><button class="btn" id="logoutBtn">Salir</button></div>`;
+        const quizLabel = quizResult && quizResult.passed ? 'Prueba aprobada' : 'Prueba pendiente';
+        const quizColor = quizResult && quizResult.passed ? 'var(--success)' : 'var(--primary-color)';
+        ua.innerHTML = `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-weight:600;color:var(--secondary-color)">${currentUser}</span><span style="background:var(--primary-color);color:white;padding:6px 10px;border-radius:20px;font-size:0.9rem">${completed}/12</span><span style="background:${quizColor};color:white;padding:6px 10px;border-radius:20px;font-size:0.9rem">${quizLabel}</span><button class="btn" id="logoutBtn">Salir</button></div>`;
         document.getElementById('logoutBtn').addEventListener('click', () => { logout(); });
     } else {
         ua.innerHTML = `<button class="btn btn-primary" id="loginBtn">Iniciar sesión</button>`;
@@ -631,11 +836,11 @@ function updateUserArea() {
     }
 }
 
-function promptLogin() {
+async function promptLogin() {
     const email = prompt('Ingresa tu correo SMARTD para identificarte:');
     if (!email || !email.includes('@')) return alert('Correo inválido');
     currentUser = email.trim().toLowerCase();
-    loadProgressFor(currentUser);
+    await loadProgressFor(currentUser);
     rememberUser(currentUser);
     updateUserArea();
     renderModules();
@@ -644,13 +849,15 @@ function promptLogin() {
 function logout() {
     currentUser = null;
     progress = {};
+    quizResult = null;
     localStorage.removeItem('smartd_user_email');
     updateUserArea();
     renderModules();
 }
 
 // Initialize login area on load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    initFirebase();
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) loginBtn.addEventListener('click', promptLogin);
     const testLink = document.getElementById('testLink');
@@ -659,7 +866,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const savedUser = localStorage.getItem('smartd_user_email');
     if (savedUser) {
         currentUser = savedUser;
-        loadProgressFor(currentUser);
+        await loadProgressFor(currentUser);
     }
     updateUserArea();
 });
@@ -737,14 +944,19 @@ function checkOnboardingComplete() {
 // Quiz / Test final
 // -------------------------
 function openQuizModal() {
-    // build simple quiz: 12 preguntas de opción múltiple (1 por módulo)
+    if (!currentUser) {
+        const ok = confirm('Debes iniciar sesión para realizar la prueba. ¿Deseas iniciar sesión ahora?');
+        if (ok) promptLogin();
+        return;
+    }
     let html = `<h2 class="module-title">Prueba Final - Onboarding</h2>`;
     html += `<form id="quizForm">`;
-    modules.forEach((m, idx) => {
+    quizQuestions.forEach((q, idx) => {
         const qid = `q${idx+1}`;
-        html += `<div class="content-section"><h4>Pregunta ${idx+1}: ¿Cuál es el tema principal del módulo '${m.title}'?</h4>`;
-        html += `<label><input type="radio" name="${qid}" value="correct"> ${m.description}</label><br>`;
-        html += `<label><input type="radio" name="${qid}" value="wrong"> Otra opción</label>`;
+        html += `<div class="content-section"><h4>Pregunta ${idx+1}: ${q.question}</h4>`;
+        q.options.forEach((opt, optionIndex) => {
+            html += `<label style="display:block; margin-bottom:0.5rem;"><input type="radio" name="${qid}" value="${optionIndex}" required> ${opt.text}</label>`;
+        });
         html += `</div>`;
     });
     html += `<div style="text-align:center;margin-top:1rem;"><button type="submit" class="btn btn-secondary">Enviar Prueba</button></div>`;
@@ -763,20 +975,26 @@ function openQuizModal() {
 function gradeQuiz() {
     const form = document.getElementById('quizForm');
     if (!form) return;
-    const total = modules.length;
+    const total = quizQuestions.length;
     let correct = 0;
-    modules.forEach((m, idx) => {
+    quizQuestions.forEach((q, idx) => {
         const qid = `q${idx+1}`;
-        const val = form[qid] && form[qid].value;
-        if (val === 'correct') correct++;
+        const val = form[qid] && parseInt(form[qid].value, 10);
+        if (typeof val === 'number' && q.options[val] && q.options[val].correct) correct++;
     });
     const score = Math.round((correct / total) * 100);
+    quizResult = {
+        passed: score >= 70,
+        score,
+        correct,
+        total,
+        date: new Date().toISOString()
+    };
+    saveQuizResult();
+    updateUserArea();
     alert(`Obtuviste ${score}% (${correct}/${total}).`);
     if (score >= 70) {
-        // mark onboarding complete
-        if (currentUser) {
-            localStorage.setItem(`smartd_onboarding_complete_${currentUser}`, 'true');
-        }
+        localStorage.setItem(`smartd_onboarding_complete_${currentUser}`, 'true');
         alert('¡Felicidades! Has aprobado la prueba. Onboarding completado.');
         closeModal();
     } else {
