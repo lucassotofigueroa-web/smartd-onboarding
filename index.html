@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMARTD - Onboarding Data Engineering</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <img src="assets/logo.png" alt="SMARTD Logo" class="logo-img">
+                <span>SMARTD Onboarding</span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#inicio" class="nav-link">Inicio</a></li>
+                <li><a href="#modulos" class="nav-link">Módulos</a></li>
+                <li><a href="#contacto" class="nav-link">Contacto</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1>Bienvenido a SMARTD</h1>
+            <p>Workshop: Conceptos Fundamentales de Data Engineering</p>
+            <p class="subtitle">Aprende los conceptos básicos que todo Data Engineer debe dominar</p>
+            <button class="btn btn-primary" onclick="scrollToModules()">Comenzar</button>
+        </div>
+        <div class="hero-image">
+            <i class="fas fa-database"></i>
+        </div>
+    </section>
+
+    <!-- Módulos Section -->
+    <section id="modulos" class="modulos">
+        <div class="container">
+            <h2 class="section-title">Módulos de Aprendizaje</h2>
+            <div class="modules-grid" id="modulesGrid"></div>
+        </div>
+    </section>
+
+    <!-- Modal para ver detalles -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 SMARTD. Todos los derechos reservados.</p>
+            <p>Esta página de onboarding fue creada para facilitar el aprendizaje de nuevos colaboradores.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
