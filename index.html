@@ -18,8 +18,9 @@
             <ul class="nav-menu" id="navMenu">
                 <li><a href="#inicio" class="nav-link">Inicio</a></li>
                 <li><a href="#modulos" class="nav-link">Módulos</a></li>
+                <li><a href="#participantes" class="nav-link">Participantes</a></li>
                 <li><a href="#contacto" class="nav-link">Contacto</a></li>
-                <li><a href="#prueba" id="testLink" class="nav-link">Prueba</a></li>
+                <li><a href="#" id="testLink" class="nav-link">Prueba</a></li>
             </ul>
             <div id="userArea">
                 <button class="btn btn-primary" id="loginBtn">Iniciar sesión</button>
@@ -63,6 +64,30 @@
 
     <!-- YouTube IFrame API (para detectar fin de reproducción) -->
     <script src="https://www.youtube.com/iframe_api"></script>
+
+    <!-- Participantes Section -->
+    <section id="participantes" class="modulos">
+        <div class="container">
+            <h2 class="section-title">Participantes y resultados</h2>
+            <p class="subtitle">Tabla con los correos que han iniciado sesión y sus avances almacenados localmente.</p>
+            <div class="participants-table-wrapper">
+                <table id="participantsTable">
+                    <thead>
+                        <tr>
+                            <th>Correo</th>
+                            <th>Módulos completados</th>
+                            <th>Puntaje</th>
+                            <th>Resultado prueba</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participantsTableBody">
+                        <tr><td colspan="5">Aún no hay participantes registrados.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer>
