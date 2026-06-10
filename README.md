@@ -151,54 +151,22 @@ En `app.js`, dentro del array `modules`, agrega un nuevo objeto:
 - JavaScript vanilla
 - FontAwesome (iconos)
 
-## � Guardado gratuito en Firebase
+## 📌 Seguimiento local de participantes
 
-Si quieres que la aplicación guarde datos de usuarios de forma centralizada, usa Firebase (gratis en el plan Spark).
+La aplicación guarda los datos de los participantes localmente en el navegador usando `localStorage`.
 
-1. Ve a https://console.firebase.google.com
-2. Crea un nuevo proyecto
-3. Añade una app web
-4. Copia la configuración de Firebase (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId)
-5. Reemplaza esos valores en `app.js` dentro de la variable `firebaseConfig`
+Cada usuario que inicia sesión queda registrado y sus avances aparecen en la sección `Participantes`.
 
-Ejemplo:
+La tabla muestra:
+- correo electrónico
+- módulos completados
+- puntaje
+- resultado de la prueba
+- fecha del último registro
 
-```js
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT_ID.firebaseapp.com",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_PROJECT_ID.appspot.com",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
-};
-```
+> El almacenamiento es local. Si abres el sitio desde otro navegador o equipo, los registros no se comparten.
 
-### Reglas de Firestore recomendadas para desarrollo
-
-En Firestore, ve a `Rules` y usa reglas abiertas temporales mientras pruebas:
-
-```js
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-```
-
-> Para producción, ajusta las reglas según tu política de acceso.
-
-### Qué guarda Firebase
-- `email`
-- `progress` (módulos completados)
-- `quizResult` (puntaje y estado de prueba)
-- `approvedAt` (fecha de aprobación cuando aprueba la prueba)
-- `updatedAt` (última fecha de modificación)
-
-## �📄 Licencia
+## 📄 Licencia
 
 Este proyecto está disponible para SMARTD y sus colaboradores.
 
