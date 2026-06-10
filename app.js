@@ -501,70 +501,69 @@ let currentUser = null;
 let progress = {}; // { moduleId: true }
 let currentPlayer = null;
 let quizResult = null;
-let firebaseEnabled = false;
-let firebaseDb = null;
 
-const firebaseConfig = {
-    apiKey: "AIzaSyDYSzmiRRIekhKhLOLUujvp4pTdAsTp2go",
-    authDomain: "onboarding---smartd.firebaseapp.com",
-    projectId: "onboarding---smartd",
-    storageBucket: "onboarding---smartd.appspot.com",
-    messagingSenderId: "742458116218",
-    appId: "1:742458116218:web:c60013bef848a80e7913c3",
-    measurementId: "G-V23KF4QK0L"
-};
-
-function hasFirebaseConfig() {
-    return !firebaseConfig.apiKey.includes('REPLACE') && !firebaseConfig.projectId.includes('REPLACE');
+function getParticipants() {
+    try {
+        return JSON.parse(localStorage.getItem('smartd_participants') || '[]');
+    } catch (error) {
+        return [];
+    }
 }
 
-function initFirebase() {
-    if (!hasFirebaseConfig()) {
-        console.warn('Firebase config not set. Using localStorage fallback only.');
+function addParticipant(email) {
+    if (!email) return;
+    const participants = getParticipants();
+    if (!participants.includes(email)) {
+        participants.push(email);
+        localStorage.setItem('smartd_participants', JSON.stringify(participants));
+    }
+}
+
+function getParticipantSummary(email) {
+    let progressData = {};
+    const rawProgress = localStorage.getItem(`smartd_progress_${email}`);
+    try {
+        progressData = rawProgress ? JSON.parse(rawProgress) : {};
+    } catch (error) {
+        progressData = {};
+    }
+    const modulesCompleted = Object.values(progressData).filter(v => v).length;
+    let quizData = null;
+    try {
+        quizData = JSON.parse(localStorage.getItem(`smartd_quiz_result_${email}`) || 'null');
+    } catch (error) {
+        quizData = null;
+    }
+    return {
+        email,
+        modulesCompleted,
+        quizPassed: quizData ? (quizData.passed ? 'Aprobada' : 'No aprobada') : 'Pendiente',
+        score: quizData ? quizData.score : '-',
+        date: quizData ? new Date(quizData.date).toLocaleString() : '-'
+    };
+}
+
+function renderParticipantsTable() {
+    const participants = getParticipants();
+    const tbody = document.getElementById('participantsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (!participants.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:1rem;">Aún no hay participantes registrados.</td></tr>`;
         return;
     }
-    try {
-        firebase.initializeApp(firebaseConfig);
-        firebaseDb = firebase.firestore();
-        firebaseEnabled = true;
-    } catch (error) {
-        console.error('No se pudo inicializar Firebase:', error);
-        firebaseEnabled = false;
-    }
-}
-
-function getFirebaseDocId(email) {
-    return email.replace(/[^a-zA-Z0-9]/g, '_');
-}
-
-function saveUserToFirebase() {
-    if (!firebaseEnabled || !currentUser) return;
-    const docId = getFirebaseDocId(currentUser);
-    const data = {
-        email: currentUser,
-        progress: progress,
-        quizResult: quizResult,
-        approvedAt: quizResult && quizResult.passed ? new Date().toISOString() : null,
-        updatedAt: new Date().toISOString()
-    };
-    firebaseDb.collection('onboardingUsers').doc(docId).set(data, { merge: true })
-        .catch(error => console.error('Error guardando en Firebase:', error));
-}
-
-function loadUserFromFirebase(email) {
-    if (!firebaseEnabled) return Promise.resolve();
-    const docId = getFirebaseDocId(email);
-    return firebaseDb.collection('onboardingUsers').doc(docId).get()
-        .then(doc => {
-            if (doc.exists) {
-                const data = doc.data();
-                progress = data.progress || {};
-                quizResult = data.quizResult || null;
-            }
-        })
-        .catch(error => {
-            console.error('Error cargando datos de Firebase:', error);
-        });
+    participants.forEach(email => {
+        const summary = getParticipantSummary(email);
+        tbody.innerHTML += `
+            <tr>
+                <td>${summary.email}</td>
+                <td>${summary.modulesCompleted}/12</td>
+                <td>${summary.score}</td>
+                <td>${summary.quizPassed}</td>
+                <td>${summary.date}</td>
+            </tr>
+        `;
+    });
 }
 
 const quizQuestions = [
@@ -697,6 +696,7 @@ function renderModules() {
         modulesGrid.appendChild(card);
     });
     updateUserArea();
+    renderParticipantsTable();
 }
 
 // Abrir modal
@@ -781,18 +781,14 @@ function saveProgress() {
     if (!currentUser) return;
     const key = storageKeyFor(currentUser);
     localStorage.setItem(key, JSON.stringify(progress));
-    if (firebaseEnabled) {
-        saveUserToFirebase();
-    }
+    renderParticipantsTable();
 }
 
 function saveQuizResult() {
     if (!currentUser || !quizResult) return;
     const key = `smartd_quiz_result_${currentUser}`;
     localStorage.setItem(key, JSON.stringify(quizResult));
-    if (firebaseEnabled) {
-        saveUserToFirebase();
-    }
+    renderParticipantsTable();
 }
 
 async function loadProgressFor(email) {
@@ -804,9 +800,6 @@ async function loadProgressFor(email) {
         progress = {};
     }
     loadQuizResultFor(email);
-    if (firebaseEnabled) {
-        await loadUserFromFirebase(email);
-    }
 }
 
 function loadQuizResultFor(email) {
@@ -840,6 +833,7 @@ async function promptLogin() {
     const email = prompt('Ingresa tu correo SMARTD para identificarte:');
     if (!email || !email.includes('@')) return alert('Correo inválido');
     currentUser = email.trim().toLowerCase();
+    addParticipant(currentUser);
     await loadProgressFor(currentUser);
     rememberUser(currentUser);
     updateUserArea();
@@ -857,7 +851,6 @@ function logout() {
 
 // Initialize login area on load
 document.addEventListener('DOMContentLoaded', async function() {
-    initFirebase();
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) loginBtn.addEventListener('click', promptLogin);
     const testLink = document.getElementById('testLink');
@@ -866,9 +859,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const savedUser = localStorage.getItem('smartd_user_email');
     if (savedUser) {
         currentUser = savedUser;
+        addParticipant(currentUser);
         await loadProgressFor(currentUser);
     }
     updateUserArea();
+    renderParticipantsTable();
 });
 
 // Keep a record of logged email (optional)
