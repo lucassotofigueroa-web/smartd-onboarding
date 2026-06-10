@@ -5,9 +5,9 @@
 }
 
 :root {
-    --primary-color: #6366f1;
-    --secondary-color: #ec4899;
-    --dark-bg: #0f172a;
+    --primary-color: #FF6633;
+    --secondary-color: #0F2847;
+    --dark-bg: #0F2847;
     --light-bg: #f8fafc;
     --text-dark: #1e293b;
     --text-light: #64748b;
@@ -98,7 +98,7 @@ body {
     gap: 3rem;
     align-items: center;
     padding: 6rem 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #FF6633 0%, #0F2847 100%);
     color: white;
 }
 
@@ -156,8 +156,8 @@ body {
 }
 
 .btn-secondary:hover {
-    background: #5558e3;
-    transform: translateY(-3px);
+    background: #E55A2B;
+    transform: translateY(-3px)
 }
 
 /* Módulos Section */
